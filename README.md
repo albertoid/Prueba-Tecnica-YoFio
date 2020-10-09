@@ -13,7 +13,7 @@ Para más información acerca de la distancia de Levenshtein ver la siguiente li
 
 El flujo del programa tiene los siguientes 8 pasos:
 
-1. Carga de datos 
+1. Extracción de datos 
 2. Revisión de la consistencia de los datos y transformación a string
 3. Normalización de mayúsculas y minúsculas
 4. Eliminación de puntuación y caracteres especiales
@@ -24,8 +24,139 @@ El flujo del programa tiene los siguientes 8 pasos:
 
 Puede ejecurse paso a paso o al final de todos se encuentra concentrado todo el código para la ejecución en un solo paso.
 
-# Punto 2. Modelo de recolección, limpieza, transformación, almacenamiento y uso de los datos
+A manera de visualización genere una nube de palabras con la reducción de los empleos identificados mostrada a continuación. Se redujo a 16 clasificaciones y una adicional de "otro" a aquellas que no se pudieron clasificar. La clasificación fue en cierta medida manual, después de la priera clasificación utilizando la similitud de las palabras.
+
+![Nube de Palabras](/img/nubepalabras.png)
+
+## Punto 2. Modelo de recolección, limpieza, transformación, almacenamiento y uso de los datos
 
 
-# Punto 3. Métricas a partir de los datos
+## Punto 3. Métricas a partir de los datos
 
+Para el cálculo de la métrica first payment rate el con la información de ls 4 procesos fue la siguiente:
+
+1. Extracción de bases de datos
+2. Limpieza y transformación
+3. Cálculo del first Payment Default Rate por dia
+
+### 3.1. Extracción de bases datos
+
+Esta la realice utilizando la relación de los nombres de los arhivos de datos agrupandolos en una lista de data frames de Pandas
+
+### 3.2. Limpieza y transformación
+
+Los filtrados correspondientes a las restricciones de las reglas de cálculo fueron realizadas mediante la funcionalidad de pandas de extracción de parámetros que cumplen ciertas carácterísticas, para el caso del proceso 2, tener todos los campos completos, en especial el de `address` ya que todos los demás campos son válidos por defecto y en el caso del proceso 3, contar con una primera compra mayor a 40 pesos. Una vez teniendo las dos listas de `user_id` la combinación de las validaciones consiste en verificar si los `user_id` están en ambas listas, por lo que las que cumplan con esta condición serán los usuarios que cuentan con datos completos y una compra inicial en `tx1_amount` mayor a 40 pesos.
+
+Algo importante en la limpieza y transformación es el tratamiento de las fechas, las cuales al estar en `string` deben ser pasadas a un formato de fecha funcional con el cual se puedan hacer operaciones, tal como lo es el tipo de datos `datetime.date`.   Una vez tienendo una lista de `user_id` que cumplen con la condiciones para ser tomados en cuenta en el cálculo del first payment default rate es posible proceder al mismo, calculando las fechas inicial y final, así como cálcular su diferencia para utilziarlo como un parámetro de control en el cálculo.
+
+### 3.3. Cálculo del first Payment Default Rate por dia
+
+Para hacer el cálculo genero una lista de usuarios por cada dia, para después hacer el cálculo dia por dia extrayendo directamente de la información de los procesos 3 y 4. Después de contabilizar los procesos en impago, la cantidad de elementos de la lista de usuarios por dia nos da el núemero de cuentas, lo que al sacar la razón entre estos nos dá el porcentaje de cuentas en impago de la primera compra con relación al fia o  el first payment default rate, resultados que se van inegrando a una lista, para posteriormente ser transformados a un data frame de pandas y pasado un archivo csv o cualquier otro proceso de carga.
+
+
+|    |      Fecha | Total_de_cuentas | Cuentas_en_impago | Porcentaje_cuentas_impago |
+|---:|-----------:|-----------------:|------------------:|---------------------------|
+|  0 | 2020-07-07 |                6 |                 1 |                     16.67 |
+|  1 | 2020-07-08 |               12 |                 1 |                      8.33 |
+|  2 | 2020-07-09 |               13 |                 1 |                      7.69 |
+|  3 | 2020-07-10 |               11 |                 1 |                      9.09 |
+|  4 | 2020-07-11 |                5 |                 1 |                     20.00 |
+|  5 | 2020-07-12 |                9 |                 1 |                     11.11 |
+|  6 | 2020-07-13 |               10 |                 1 |                     10.00 |
+|  7 | 2020-07-14 |                8 |                 0 |                      0.00 |
+|  8 | 2020-07-15 |                3 |                 1 |                     33.33 |
+|  9 | 2020-07-16 |               15 |                 1 |                      6.67 |
+| 10 | 2020-07-17 |               12 |                 1 |                      8.33 |
+| 11 | 2020-07-18 |               11 |                 0 |                      0.00 |
+| 12 | 2020-07-19 |               15 |                 1 |                      6.67 |
+| 13 | 2020-07-20 |               11 |                 1 |                      9.09 |
+| 14 | 2020-07-21 |               13 |                 1 |                      7.69 |
+| 15 | 2020-07-22 |               11 |                 1 |                      9.09 |
+| 16 | 2020-07-23 |               11 |                 1 |                      9.09 |
+| 17 | 2020-07-24 |               16 |                 1 |                      6.25 |
+| 18 | 2020-07-25 |               10 |                 1 |                     10.00 |
+| 19 | 2020-07-26 |                6 |                 0 |                      0.00 |
+| 20 | 2020-07-27 |               15 |                 1 |                      6.67 |
+| 21 | 2020-07-28 |               13 |                 1 |                      7.69 |
+| 22 | 2020-07-29 |               11 |                 1 |                      9.09 |
+| 23 | 2020-07-30 |               12 |                 1 |                      8.33 |
+| 24 | 2020-07-31 |               12 |                 1 |                      8.33 |
+| 25 | 2020-08-01 |               12 |                 1 |                      8.33 |
+| 26 | 2020-08-02 |               25 |                 1 |                      4.00 |
+| 27 | 2020-08-03 |               18 |                 1 |                      5.56 |
+| 28 | 2020-08-04 |               15 |                 1 |                      6.67 |
+| 29 | 2020-08-05 |               18 |                 1 |                      5.56 |
+| 30 | 2020-08-06 |                9 |                 1 |                     11.11 |
+| 31 | 2020-08-07 |               23 |                 1 |                      4.35 |
+| 32 | 2020-08-08 |                9 |                 1 |                     11.11 |
+| 33 | 2020-08-09 |               14 |                 1 |                      7.14 |
+| 34 | 2020-08-10 |               11 |                 1 |                      9.09 |
+| 35 | 2020-08-11 |                9 |                 1 |                     11.11 |
+| 36 | 2020-08-12 |                5 |                 1 |                     20.00 |
+| 37 | 2020-08-13 |                8 |                 1 |                     12.50 |
+| 38 | 2020-08-14 |               11 |                 1 |                      9.09 |
+| 39 | 2020-08-15 |               13 |                 1 |                      7.69 |
+| 40 | 2020-08-16 |               11 |                 1 |                      9.09 |
+| 41 | 2020-08-17 |               13 |                 1 |                      7.69 |
+| 42 | 2020-08-18 |               15 |                 1 |                      6.67 |
+| 43 | 2020-08-19 |               10 |                 1 |                     10.00 |
+| 44 | 2020-08-20 |               14 |                 1 |                      7.14 |
+| 45 | 2020-08-21 |               11 |                 1 |                      9.09 |
+| 46 | 2020-08-22 |               13 |                 1 |                      7.69 |
+| 47 | 2020-08-23 |               16 |                 1 |                      6.25 |
+| 48 | 2020-08-24 |                7 |                 1 |                     14.29 |
+| 49 | 2020-08-25 |               19 |                 1 |                      5.26 |
+| 50 | 2020-08-26 |               13 |                 1 |                      7.69 |
+| 51 | 2020-08-27 |               11 |                 1 |                      9.09 |
+| 52 | 2020-08-28 |               17 |                 1 |                      5.88 |
+| 53 | 2020-08-29 |               10 |                 1 |                     10.00 |
+| 54 | 2020-08-30 |                8 |                 1 |                     12.50 |
+| 55 | 2020-08-31 |               13 |                 1 |                      7.69 |
+| 56 | 2020-09-01 |                9 |                 1 |                     11.11 |
+| 57 | 2020-09-02 |               10 |                 1 |                     10.00 |
+| 58 | 2020-09-03 |                9 |                 1 |                     11.11 |
+| 59 | 2020-09-04 |               10 |                 1 |                     10.00 |
+| 60 | 2020-09-05 |               13 |                 1 |                      7.69 |
+| 61 | 2020-09-06 |               10 |                 1 |                     10.00 |
+| 62 | 2020-09-07 |               13 |                 1 |                      7.69 |
+| 63 | 2020-09-08 |               13 |                 1 |                      7.69 |
+| 64 | 2020-09-09 |               10 |                 1 |                     10.00 |
+| 65 | 2020-09-10 |               11 |                 1 |                      9.09 |
+| 66 | 2020-09-11 |               17 |                 1 |                      5.88 |
+| 67 | 2020-09-12 |               12 |                 1 |                      8.33 |
+| 68 | 2020-09-13 |               12 |                 1 |                      8.33 |
+| 69 | 2020-09-14 |               11 |                 1 |                      9.09 |
+| 70 | 2020-09-15 |               12 |                 1 |                      8.33 |
+| 71 | 2020-09-16 |                9 |                 1 |                     11.11 |
+| 72 | 2020-09-17 |               12 |                 1 |                      8.33 |
+| 73 | 2020-09-18 |               11 |                 1 |                      9.09 |
+| 74 | 2020-09-19 |                8 |                 1 |                     12.50 |
+| 75 | 2020-09-20 |                8 |                 1 |                     12.50 |
+| 76 | 2020-09-21 |               14 |                 1 |                      7.14 |
+| 77 | 2020-09-22 |                9 |                 1 |                     11.11 |
+| 78 | 2020-09-23 |               18 |                 1 |                      5.56 |
+| 79 | 2020-09-24 |               17 |                 1 |                      5.88 |
+| 80 | 2020-09-25 |               13 |                 1 |                      7.69 |
+| 81 | 2020-09-26 |               11 |                 1 |                      9.09 |
+| 82 | 2020-09-27 |                9 |                 1 |                     11.11 |
+| 83 | 2020-09-28 |                4 |                 1 |                     25.00 |
+| 84 | 2020-09-29 |                9 |                 1 |                     11.11 |
+
+Para una mejor visualización de estos datos las siguientes gráficas describen el comportamiento de los usuarios y su cumplimiento de pago en la gráfica 1
+
+![Grafica 1](/img/Grafica1.png)
+
+En la gráfica 2 se observa que el máximo registrado de usuarios impagos en su primera compra es de 1 (un) usuario al dia según su fecha de registro. En esta gráfica observamos con la distribución de la cantidad de usuarios registrados por dia se comporta de forma normal o gaussiana con una media en 11.71
+
+![Grafica 2](/img/Grafica2.png)
+
+Aqui en la gráfica 3 podemos observar que la distribución entre aquellos dias con niguna cuanta impaga y las que están al corriente es una distribución J
+
+![Grafica 3](/img/Grafica3.png)
+
+Por último en la gráfica 4 la distribución de los first Payment Default Rate muestra un desplazamiento a la izquierda al tener outlayers a la derecha muy grandes según el margen observado, por aquellos dias que existen pocos registros.
+
+
+![Grafica 4](/img/Grafica4.png)
+
+ 
