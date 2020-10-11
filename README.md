@@ -7,7 +7,7 @@ Una vez instaladas todas las dependencias la aplicación puede ser ejecutada de 
 
 ## Punto 1. Limpieza y transformación de los datos
 
-Utilizaré la técnica de tokenización manual como primer proceso de limpieza. Utilizo la distancia de Levenshtein para determinar la similaridad de las palabras en el contexto de ser ocupaciones siendo y en la función `Clasificador_Empleo` se define como argumento la variable `precision` para asignar la diferencia aceptable al realizar el cálculo de las distancias para la identificación del empleo ingresado. En esta versión al identificar una ocupación con una distancia de Levenshtein menor a la establecida en `precision` asigna el nombre del grupo a ese elemento de la lista. En futuras implementaciones se puede modificar para que evalue todas las palabras y asigne la de menor distancia de Levenshtein.
+Utilizaré la técnica de tokenización manual como primer proceso de limpieza. Utilizo la distancia de Levenshtein para determinar la similaridad de las palabras en el contexto de ser ocupaciones siendo y en la función `Clasificador_Empleo` se define como argumento la variable `precision` para asignar la diferencia aceptable al realizar el cálculo de las distancias para la identificación del empleo ingresado. En esta versión al identificar una ocupación con una distancia de Levenshtein menor a la establecida en `precision` asigna el nombre del grupo a ese elemento de la lista. En futuras implementaciones se puede modificar para que evalué todas las palabras y asigne la de menor distancia de Levenshtein.
 
 Para más información acerca de la distancia de Levenshtein ver la siguiente liga: [Distancia de Levenshtein](https://en.wikipedia.org/wiki/Levenshtein_distance#:~:text=Informally%2C%20the%20Levenshtein%20distance%20between,considered%20this%20distance%20in%201965.). Y para conocer de la biblioteca en Python que la calcula, ver la siguiente liga: [python-Levenshtein](https://github.com/ztane/python-Levenshtein/).
 
@@ -26,10 +26,41 @@ Puede ejecurse paso a paso o al final de todos se encuentra concentrado todo el 
 
 A manera de visualización genere una nube de palabras con la reducción de los empleos identificados mostrada a continuación. Se redujo a 16 clasificaciones y una adicional de "otro" a aquellas que no se pudieron clasificar. La clasificación fue en cierta medida manual, después de la priera clasificación utilizando la similitud de las palabras.
 
-![Nube de Palabras](/img/nubepalabras.png)
+<p align="center">
+  <img src="https://github.com/albertoid/Prueba-Tecnica-YoFio/blob/main/img/nubepalabras.png">
+</p>
 
 ## Punto 2. Modelo de recolección, limpieza, transformación, almacenamiento y uso de los datos
 
+Para el diseño del diagrama de componentes se consideraron las siguientes tecnologías y herramientas:
+
+1. Python
+    1. Pandas
+    2. psyconpg2
+    3. Flask / Django 
+2. PostgreSQL
+3.AWS
+    1. EC2
+    2. RDS
+4. HTML
+
+El Origen 1 al ser alimentado directamente por el usuario al registrarse, se considera que proviene de un componente Web Browser que se conecta por medio de HTML y este mediante un API alimenta una base de datos en la nube (podría ser en un serivicio local pero en este caso se piensa en un servicio en la nube). El Origen 2 no hace referencia a la alimentación de los datos, pero estos se consideran previemente existentes en una base de datos relacional que se aloja en un servidor en la nube, por lo que sus procesos son interconectados mediante peticiones (<em>requests</em>) a la base de datos. Otro compomente deberá ser el encargado de hacer el ingreso de la información, ya que el caso esta enfocado a la solución particular de la recolección de datos dada la naturaleza del proceso. Para el Origen 3 al igual que el Origen 2 la base  de datos se alimenta mediante otro componente, y en este caso funciona de manera similar que el componente anterior.
+
+A continuación se muestra el diagrama de componentes descrito en el punto 2
+
+<p align="center">
+  <img src="https://github.com/albertoid/Prueba-Tecnica-YoFio/blob/main/img/DiagramaComponentes.png">
+</p>
+
+Para el caso de la consulta de datos y la interconexión posterior a un motor de Machine Learning (ML), mediante la implementación de una API corriendo en un servicio EC2 o S3 de AWS, este hará los requerimientos a las base de datos de los 3 origenes y hará los procesos de transformación (preparación para hacer los datos compatibles con las bibliotecas de ML) mediante la biblioteca de pandas y posteriormente se ejecutaran los algoritomos de ML definidos mediante la libreria de Scikit Learn (Podría ser cualquier otra considerando los procedimientoe de estas con funciones que hagan compatibles los datos transformados) y estos podrían regresar en mediante el mismo servicio de la API que recibe los datos en un despliegue instantáneo o bien alimentando una bitácora de consultas, integrando un informe automático, que inclusive emita alguna recomendación dependiendo del resultado.
+
+A continuación se muestra el diagrama de este módulo de consulta y aplicación de un motor de ML.
+
+<p align="center">
+  <img src="https://github.com/albertoid/Prueba-Tecnica-YoFio/blob/main/img/DiagramaComponeteConsulta.png">
+</p>
+
+Como conclusción todos los componentes descritos pueden encapsularse en un solo para realizar la tarea descrita. De la misma manera un <em>Query</em> de SQL puede tener la potencia extraer la información requerida de los procesos definidos, lo que a nivel de implementación simplificaría la tarea, por supuesto si las bases de datos compartieran un entorno en donde pudieran relacionarse entre si con el motor de SQL. El API de consulta podría complementarse con el de limpieza para tomar los datos de las bases como están sin procesarse y hacer la tarea de consulta.
 
 ## Punto 3. Métricas a partir de los datos
 
@@ -144,19 +175,27 @@ Para hacer el cálculo genero una lista de usuarios por cada dia, para después 
 
 Para una mejor visualización de estos datos las siguientes gráficas describen el comportamiento de los usuarios y su cumplimiento de pago en la gráfica 1
 
-![Grafica 1](/img/Grafica1.png)
+<p align="center">
+  <img src="https://github.com/albertoid/Prueba-Tecnica-YoFio/blob/main/img/Grafica1.png">
+</p>
+
 
 En la gráfica 2 se observa que el máximo registrado de usuarios impagos en su primera compra es de 1 (un) usuario al dia según su fecha de registro. En esta gráfica observamos con la distribución de la cantidad de usuarios registrados por dia se comporta de forma normal o gaussiana con una media en 11.71
 
-![Grafica 2](/img/Grafica2.png)
+<p align="center">
+  <img src="https://github.com/albertoid/Prueba-Tecnica-YoFio/blob/main/img/Grafica2.png">
+</p>
 
 Aqui en la gráfica 3 podemos observar que la distribución entre aquellos dias con niguna cuanta impaga y las que están al corriente es una distribución J
 
-![Grafica 3](/img/Grafica3.png)
+<p align="center">
+  <img src="https://github.com/albertoid/Prueba-Tecnica-YoFio/blob/main/img/Grafica3.png">
+</p>
 
 Por último en la gráfica 4 la distribución de los first Payment Default Rate muestra un desplazamiento a la izquierda al tener outlayers a la derecha muy grandes según el margen observado, por aquellos dias que existen pocos registros.
 
-
-![Grafica 4](/img/Grafica4.png)
+<p align="center">
+  <img src="https://github.com/albertoid/Prueba-Tecnica-YoFio/blob/main/img/Grafica4.png">
+</p>
 
  
